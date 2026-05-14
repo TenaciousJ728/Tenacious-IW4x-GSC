@@ -6,7 +6,7 @@ A loadout randomizer.
 
 <img width="2560" height="1080" alt="10190_18" src="https://github.com/user-attachments/assets/edf1dd52-a681-4323-bb4e-85c69a72ab6f" />
 
-## Features:
+## Features
 - Built for Search & Destroy, but should work for other modes too.
 - Randomizes weapons, equipment, and perks. Either per round, or also after a set interval.
 - Prevents players from switching classes within a round's first 15 seconds.
