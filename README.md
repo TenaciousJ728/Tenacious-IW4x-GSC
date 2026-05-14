@@ -14,7 +14,9 @@ A loadout randomizer.
 - Bots-friendly! This script won't crash the server upon spawning bots, even with a full load of bots.
 
 ## Installation
-Place in `\userraw\*` and launch server.
+1. Place `rando.gsc` in your `\userraw\*`
+2. Extract [these dependencies](https://github.com/TenaciousJ728/IW4x-MP-GSC/raw/refs/heads/main/scriptDependencies.zip) and place them with rando.gsc
+3. Start server
 
 ### dvars
 
