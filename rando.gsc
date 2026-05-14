@@ -16,7 +16,7 @@ init()
     setDvarIfUninitialized("rando_perks_mode", 2);
     setDvarIfUninitialized("rando_mains_amount", 2);
     setDvarIfUninitialized("rando_attachments_max", 1);
-    setDvarIfUninitialized("rando_interval", 0);
+    setDvarIfUninitialized("rando_interval", 55);
     setDvarIfUninitialized("rando_interval_reruns", 0);
     setDvarIfUninitialized("rando_notify_at_seconds", 9);
     setDvarIfUninitialized("rando_switch_immediate", 0);
