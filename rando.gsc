@@ -23,6 +23,8 @@ init()
     setDvarIfUninitialized("rando_debug_loadout", 0);
     setDvarIfUninitialized("rando_debug_items", 0);
     setDvarIfUninitialized("rando_debug_skip_enforcement", 0);
+    //For Muhlex scripts:
+    setDvarIfUninitialized("scr_death_drop_weapon", 0);
 
     if (!getDvarInt("rando_enable"))
         return;
