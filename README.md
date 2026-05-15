@@ -16,7 +16,8 @@ A loadout randomizer.
 ## Installation
 1. Place `rando.gsc` in your `\userraw\*`
 2. Extract [these dependencies](https://github.com/TenaciousJ728/IW4x-MP-GSC/raw/refs/heads/main/scriptDependencies.zip) and place them with rando.gsc
-3. Start server
+3. Edit your server.cfg and add `set rando_enable 1`.
+4. Start server
 
 ### dvars
 
