@@ -45,6 +45,6 @@ A loadout randomizer.
 - [ ] Make next-class preview pretty.
 - [ ] Make a rando mode for different classes per player.
 - [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode.
-- [ ] End class enforcement on using OMA
+- [ ] End class enforcement on using OMA. Or use `changed_kit` notify?
 - [ ] Bind OMA to key instead of as third weapon?
 - [ ] Kick player out of OMA menu at countdown?
