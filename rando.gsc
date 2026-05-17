@@ -31,7 +31,7 @@ init()
         return;
 
     if (getDvarInt("rando_debug_loadout") == 1)
-        iPrintLnBold("^5Rando beta001 loaded! Interval: ^2" + getDvarInt("rando_interval") + "s | Attachments: ^2" + getDvarInt("rando_attachments"));
+        iPrintLnBold("^5Rando beta-002 loaded! ^2Interval: " + getDvarInt("rando_interval") + "s | Attachments: ^2" + getDvarInt("rando_attachments"));
 
     if (getDvarInt("rando_attachments") > 2)
         setDvar("rando_attachments", 2);
@@ -178,6 +178,8 @@ OnPlayerConnected()
 OnPlayerSpawned()
 {
     self endon("disconnect");
+    self endon("game_ended");
+    self endon("round_ended");
 
     for (;;)
     {
@@ -323,6 +325,9 @@ monitorClassEnforcement()
     {
         wait 0.1;
 
+        if (isDefined(level.currentLoadout.perk1) && level.currentLoadout.perk1 == "specialty_onemanarmy")
+            continue;
+
         mismatch = false;
         if (isDefined(level.currentLoadout.mainWeapons))
         {
@@ -430,7 +435,7 @@ selectValidAttachments(baseItem, attachCount)
 
     for (try = 0; try < 30; try++)
     {
-        selected = [];   // always initialized
+        selected = [];   
 
         // Fresh copy of candidates (manual because no arrayCopy())
         candidates = [];
@@ -558,9 +563,9 @@ debugPrintLoadout(loadout, isNextLoadout)
     {
         prefix = "^5[NEXT CLASS PREVIEW] ";
         // Called from level timer thread → broadcast to all alive players
-        foreach (player in level.players)
+        foreach (player in level.players) 
 //            if (isDefined(player) && isAlive(player))
-            if (isDefined(player)
+            if (isDefined(player))
                 player thread playerPrintLoadout(loadout, prefix);
         return;
     }
@@ -604,9 +609,7 @@ playerPrintLoadout(loadout, prefix)
         self iPrintLn(prefix + "Perks: ^2" + perks);
     }
     else
-    {
         self iPrintLn(prefix + "^1(No perks — rando_perks_mode 0)");
-    }
 }
 
 
