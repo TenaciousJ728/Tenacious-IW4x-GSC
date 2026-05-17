@@ -1,6 +1,6 @@
 // ================================================
-// IW4x mp rando
-// v20260514
+// IW4x mp "rando"
+// beta-002
 // by Tenacious J
 // 
 // A (single-class) loadout randomizer.
@@ -31,7 +31,7 @@ init()
         return;
 
     if (getDvarInt("rando_debug_loadout") == 1)
-        iPrintLnBold("^5Random Class v46 loaded | Interval: ^2" + getDvarInt("rando_interval") + "s | Attachments: ^2" + getDvarInt("rando_attachments"));
+        iPrintLnBold("^5Rando beta001 loaded! Interval: ^2" + getDvarInt("rando_interval") + "s | Attachments: ^2" + getDvarInt("rando_attachments"));
 
     if (getDvarInt("rando_attachments") > 2)
         setDvar("rando_attachments", 2);
@@ -40,7 +40,7 @@ init()
 
     // ====================== getItems() ======================
     items = scripts\_items::getItems();
-    level.weaponPool     = items["weapon"];
+    level.weaponPool = items["weapon"];
     level.attachmentPool = items["attachment"];
 
     // ====================== WEAPON BLACKLIST ======================
@@ -130,8 +130,6 @@ init()
     level.perk4Pool[level.perk4Pool.size] = "specialty_combathigh";
     level.perk4Pool[level.perk4Pool.size] = "specialty_grenadepulldeath";
     level.perk4Pool[level.perk4Pool.size] = "specialty_finalstand";
-
-
 
     if (getDvarInt("rando_debug_items") == 1)
     {
@@ -244,7 +242,8 @@ startEnforcementSystem()
     }
 }
 
-// ====================== PERSISTENT BOTTOM-CENTER COUNTDOWN TIMER ======================
+
+
 intervalSystem()
 {
     level endon("game_ended");
@@ -310,7 +309,7 @@ watchForGameEnd(label, number)
     if (isDefined(number)) number destroy();
 }
 
-// ====================== YOUR UPDATED ENFORCEMENT LOGIC ======================
+
 monitorClassEnforcement()
 {
     self endon("disconnect");
@@ -338,13 +337,13 @@ monitorClassEnforcement()
     }
 }
 
+
 getRandomLoadout()
 {
     loadout = spawnStruct();
 
-    // ====================== PERKS FIRST (so Bling can affect weapons) ======================
+    // ====================== PERKS FIRST ======================
     perksMode = getDvarInt("rando_perks_mode");
-
     if (perksMode == 0)
     {
         loadout.perk1 = undefined; loadout.perk1Pro = undefined;
@@ -371,8 +370,7 @@ getRandomLoadout()
 
         loadout.perk4 = level.perk4Pool[randomInt(level.perk4Pool.size)];
     }
-
-    // ====================== MAIN WEAPONS (Bling bonus + exclusive groups) ======================
+    // ====================== MAIN WEAPONS ======================
     amount = getDvarInt("rando_mains");
     if (amount < 1) amount = 1;
     if (amount > level.weaponPool.size) amount = level.weaponPool.size;
@@ -383,44 +381,13 @@ getRandomLoadout()
     for (i = 0; i < keys.size; i++)
         temp[temp.size] = keys[i];
 
-    // Canonical attachment order (your list)
-    canonical = [];
-    canonical[canonical.size] = "acog";
-    canonical[canonical.size] = "eotech";
-    canonical[canonical.size] = "gl";
-    canonical[canonical.size] = "akimbo";
-    canonical[canonical.size] = "fmj";
-    canonical[canonical.size] = "grip";
-    canonical[canonical.size] = "heartbeat";
-    canonical[canonical.size] = "reflex";
-    canonical[canonical.size] = "rof";
-    canonical[canonical.size] = "shotgun";
-    canonical[canonical.size] = "silencer";
-    canonical[canonical.size] = "tactical";
-    canonical[canonical.size] = "thermal";
-    canonical[canonical.size] = "xmags";
-
-    // Mutually exclusive groups
-    opticGroup = [];
-    opticGroup[opticGroup.size] = "acog";
-    opticGroup[opticGroup.size] = "eotech";
-    opticGroup[opticGroup.size] = "reflex";
-    opticGroup[opticGroup.size] = "thermal";
-    opticGroup[opticGroup.size] = "akimbo";
-    opticGroup[opticGroup.size] = "tactical";
-    launcherGroup = [];
-    launcherGroup[launcherGroup.size] = "gl";
-    launcherGroup[launcherGroup.size] = "shotgun";
-    secondaryGroup = [];
-//    secondaryGroup[secondaryGroup.size] = "akimbo";
-//    secondaryGroup[secondaryGroup.size] = "tactical";
-
     for (i = 0; i < amount && temp.size > 0; i++)
     {
         idx = randomInt(temp.size);
         weaponKey = temp[idx];
         baseItem = level.weaponPool[weaponKey];
 
+        // Bling math
         baseAttach = getDvarInt("rando_attachments");
         if (baseAttach == -1) baseAttach = 0;
         else if (baseAttach > 2) baseAttach = 2;
@@ -433,82 +400,16 @@ getRandomLoadout()
             attachCount += 1;
         if (hasBlingPro)
             attachCount += 1;
-        if (attachCount > 2) attachCount = 2;
+        if (attachCount > 2)
+            attachCount = 2;
 
-        // Try up to 12 times to get a valid combo
-        weaponDef = undefined;
-        for (try = 0; try < 12 && !isDefined(weaponDef); try++)
-        {
-            attachmentNames = [];
-            if (attachCount > 0 && isDefined(baseItem) && isDefined(baseItem.validAttachments))
-            {
-                validAtts = baseItem.validAttachments;
-                attTemp = [];
-                for (j = 0; j < validAtts.size; j++)
-                    attTemp[attTemp.size] = validAtts[j];
+        // === Pure table-driven selection ===
+        attachments = selectValidAttachments(baseItem, attachCount);
 
-                for (k = 0; k < attachCount && attTemp.size > 0; k++)
-                {
-                    attIdx = randomInt(attTemp.size);
-                    attachmentNames[attachmentNames.size] = attTemp[attIdx].name;
-                    newAtt = [];
-                    for (m = 0; m < attTemp.size; m++)
-                        if (m != attIdx)
-                            newAtt[newAtt.size] = attTemp[m];
-                    attTemp = newAtt;
-                }
-            }
-
-            // === ENFORCE MUTUALLY EXCLUSIVE GROUPS ===
-            filtered = [];
-            hasOptic = false;
-            hasLauncher = false;
-//            hasSecondary = false;
-
-            for (a = 0; a < attachmentNames.size; a++)
-            {
-                att = attachmentNames[a];
-                isOptic = false;
-                for (o = 0; o < opticGroup.size; o++)
-                    if (att == opticGroup[o]) { isOptic = true; break; }
-
-                isLauncher = false;
-                for (l = 0; l < launcherGroup.size; l++)
-                    if (att == launcherGroup[l]) { isLauncher = true; break; }
-
-//                isSecondary = false;
-//                for (s = 0; s < secondaryGroup.size; s++)
-//                    if (att == secondaryGroup[s]) { isSecondary = true; break; }
-
-                if (isOptic && hasOptic) continue;
-                if (isLauncher && hasLauncher) continue;
-//                if (isSecondary && hasSecondary) continue;
-
-                filtered[filtered.size] = att;
-                if (isOptic)    hasOptic = true;
-                if (isLauncher) hasLauncher = true;
-//                if (isSecondary) hasSecondary = true;
-            }
-
-            // Sort filtered list into canonical order
-            sorted = [];
-            for (c = 0; c < canonical.size; c++)
-            {
-                for (f = 0; f < filtered.size; f++)
-                {
-                    if (filtered[f] == canonical[c])
-                    {
-                        sorted[sorted.size] = filtered[f];
-                        break;
-                    }
-                }
-            }
-
-            weaponDef = scripts\_items::createWeaponDef(baseItem, sorted, undefined);
-        }
-
+        weaponDef = scripts\_items::createWeaponDef(baseItem, attachments, undefined);
         loadout.mainWeapons[loadout.mainWeapons.size] = weaponDef;
 
+        // Remove used weapon
         newTemp = [];
         for (j = 0; j < temp.size; j++)
             if (j != idx)
@@ -522,26 +423,79 @@ getRandomLoadout()
     return loadout;
 }
 
+selectValidAttachments(baseItem, attachCount)
+{
+    if (attachCount <= 0 || !isDefined(baseItem) || !isDefined(baseItem.validAttachments) || baseItem.validAttachments.size == 0)
+        return [];
+
+    for (try = 0; try < 30; try++)
+    {
+        selected = [];   // always initialized
+
+        // Fresh copy of candidates (manual because no arrayCopy())
+        candidates = [];
+        for (j = 0; j < baseItem.validAttachments.size; j++)
+            candidates[candidates.size] = baseItem.validAttachments[j];
+
+        // === PRIMARY ===
+        primaryIdx = randomInt(candidates.size);
+        primary = candidates[primaryIdx];
+        selected[selected.size] = primary;
+
+        if (attachCount == 1)
+            return selected;
+
+        // === SECONDARY - strict combosMap filter from attachmentcombos.csv ===
+        secondaryCandidates = [];
+        foreach (att in candidates)
+        {
+            if (att.name == primary.name)
+                continue;
+            if (isDefined(primary.combosMap[att.name]) && primary.combosMap[att.name])
+                secondaryCandidates[secondaryCandidates.size] = att;
+        }
+
+        if (secondaryCandidates.size == 0)
+            continue;   // bad primary → retry whole thing
+
+        secondary = secondaryCandidates[randomInt(secondaryCandidates.size)];
+        selected[selected.size] = secondary;
+
+        // Final pair validation
+        if (isDefined(primary.combosMap[secondary.name]) && primary.combosMap[secondary.name] &&
+            isDefined(secondary.combosMap[primary.name]) && secondary.combosMap[primary.name])
+        {
+            return selected;   // good pair
+        }
+
+        // otherwise retry (mainly secondary)
+    }
+
+    // Fallback - return whatever we managed to get (should be rare)
+//    return selected;
+}
+
+
+
 applyRandomLoadout(loadout, isEnforcement)
 {
     self maps\mp\_utility::_clearPerks();
     foreach (weapon in arrayCombine(self getWeaponsListPrimaries(), self getWeaponsListOffhands()))
         self takeWeapon(weapon);
 
-//    perksMode = getDvarInt("rando_perks_mode");
     if (getDvarInt("rando_perks_mode") != 0)
     {
         if (!isEnforcement)
             self maps\mp\perks\_perks::givePerk(loadout.perk4);
-
         self maps\mp\perks\_perks::givePerk(loadout.perk1);
-        if (isDefined(loadout.perk1Pro)) self maps\mp\perks\_perks::givePerk(loadout.perk1Pro);
-
+        if (isDefined(loadout.perk1Pro))
+            self maps\mp\perks\_perks::givePerk(loadout.perk1Pro);
         self maps\mp\perks\_perks::givePerk(loadout.perk2);
-        if (isDefined(loadout.perk2Pro)) self maps\mp\perks\_perks::givePerk(loadout.perk2Pro);
-
+        if (isDefined(loadout.perk2Pro))
+            self maps\mp\perks\_perks::givePerk(loadout.perk2Pro);
         self maps\mp\perks\_perks::givePerk(loadout.perk3);
-        if (isDefined(loadout.perk3Pro)) self maps\mp\perks\_perks::givePerk(loadout.perk3Pro);
+        if (isDefined(loadout.perk3Pro))
+            self maps\mp\perks\_perks::givePerk(loadout.perk3Pro);
     }
 
     if (isDefined(loadout.mainWeapons))
@@ -588,7 +542,7 @@ applyRandomLoadout(loadout, isEnforcement)
         self thread debugPrintLoadout(level.currentLoadout, false);
     self updatePerkIcons(loadout);
 
-    waittillframeend;
+    wait 0.05;
     if (getDvarInt("rando_switch_immediate") == 1)
         self switchToWeaponImmediate(loadout.mainWeapons[0].fullName);
     else 
@@ -605,12 +559,9 @@ debugPrintLoadout(loadout, isNextLoadout)
         prefix = "^5[NEXT CLASS PREVIEW] ";
         // Called from level timer thread → broadcast to all alive players
         foreach (player in level.players)
-        {
-            if (isDefined(player) && isAlive(player))
-            {
+//            if (isDefined(player) && isAlive(player))
+            if (isDefined(player)
                 player thread playerPrintLoadout(loadout, prefix);
-            }
-        }
         return;
     }
 
@@ -618,6 +569,8 @@ debugPrintLoadout(loadout, isNextLoadout)
     prefix = "^3[CURRENT CLASS] ";
     self thread playerPrintLoadout(loadout, prefix);
 }
+
+
 
 playerPrintLoadout(loadout, prefix)
 {
@@ -655,6 +608,7 @@ playerPrintLoadout(loadout, prefix)
         self iPrintLn(prefix + "^1(No perks — rando_perks_mode 0)");
     }
 }
+
 
 
 uiPersistentCountdownTimer(totalTime)
@@ -745,13 +699,14 @@ uiPersistentCountdownTimer(totalTime)
         wait 1;
     }
 
+    if (isDefined(label)) label destroy();
+    if (isDefined(number)) number destroy();
+
     foreach (player in level.players)
         if (isDefined(player) && isAlive(player))
             player playLocalSound("mp_ingame_summary");
-
-    if (isDefined(label)) label destroy();
-    if (isDefined(number)) number destroy();
 }
+
 
 
 updatePerkIcons(loadout)
@@ -851,26 +806,21 @@ updatePerkIcons(loadout)
         self.perkIconHuds[self.perkIconHuds.size] = icon;
     }
 
-    // === NEW: Clean up exactly like the countdown timer ===
     self thread watchPerkIconsForRoundEnd();
     self thread watchPerkIconsForGameEnd();
 }
-
-// ====================== PERK ICON WATCHERS ======================
 watchPerkIconsForRoundEnd()
 {
     self endon("disconnect");
     level waittill("round_ended");
     self destroyPerkIcons();
 }
-
 watchPerkIconsForGameEnd()
 {
     self endon("disconnect");
     level waittill("game_ended");
     self destroyPerkIcons();
 }
-
 destroyPerkIcons()
 {
     if (isDefined(self.perkIconHuds))
