@@ -43,6 +43,7 @@ A loadout randomizer.
 ## To-do
 - [x] Fix/rewrite multi-attachment selection.
 - [ ] Make next-class preview pretty.
+- [ ] Select player model based on selected primary main. (Gillie for snipers/heavy armor for shield)
 - [ ] Make a rando mode for different classes per player.
 - [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode.
 - [x] End class enforcement on using OMA. Or use `changed_kit` notify?
