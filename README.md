@@ -41,7 +41,7 @@ A loadout randomizer.
 - `rando_debug_skip_enforcement` = Skips player loadout checks and class enforcement at first 15 seconds of round. Handy for buggy rando selection.
 
 ## To-do
-- [ ] Fix/rewrite multi-attachment selection.
+- [x] Fix/rewrite multi-attachment selection.
 - [ ] Make next-class preview pretty.
 - [ ] Make a rando mode for different classes per player.
 - [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode.
