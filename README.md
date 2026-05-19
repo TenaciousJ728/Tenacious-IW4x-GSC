@@ -4,10 +4,10 @@ Personal add-on scripts for IW4x dedicated server.
 # Rando
 A loadout randomizer.
 
-<img width="2560" height="1080" alt="10190_18" src="https://github.com/user-attachments/assets/edf1dd52-a681-4323-bb4e-85c69a72ab6f" />
+<img width="1574" height="630" alt="bleh" src="https://github.com/user-attachments/assets/3eff065a-a8fe-48f7-8f92-de7d8326c4fe" />
 
 ## Features
-- Built for Search & Destroy, but should work for other modes too.
+- Works for all game modes.
 - Randomizes weapons, equipment, and perks. Either per round, or also after a set interval.
 - Prevents players from switching classes within a round's first 15 seconds.
 - Displays the current loadout's perks at all times.
@@ -47,7 +47,8 @@ A loadout randomizer.
 - [x] Fix/rewrite multi-attachment selection.
 - [x] Make next-class preview pretty.
 - [ ] Select player model based on selected primary main. (Gillie for snipers/heavy armor for shield)
-- [ ] Make a rando mode for different classes per player.
+- [ ] Make a rando mode for different classes per player, per life. (with weapon drops enabled)
 - [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode.
 - [x] End class enforcement on using OMA. Or use `changed_kit` notify?
+- [ ] Have killstreak rewards randomly selected per game?
 - [ ] Kick player out of OMA menu at countdown?
