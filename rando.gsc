@@ -1,6 +1,6 @@
 // ================================================
 // IW4x mp "rando"
-// beta-002
+// beta-004
 // by Tenacious J
 // 
 // A (single-class) loadout randomizer.
@@ -19,6 +19,7 @@ init()
     setDvarIfUninitialized("rando_interval", 0);
     setDvarIfUninitialized("rando_interval_reruns", 0);
     setDvarIfUninitialized("rando_notify_at_seconds", 9);
+    setDvarIfUninitialized("rando_oma_mode", 1);
     setDvarIfUninitialized("rando_switch_immediate", 0);
     setDvarIfUninitialized("rando_debug_loadout", 0);
     setDvarIfUninitialized("rando_debug_items", 0);
@@ -31,7 +32,7 @@ init()
         return;
 
     if (getDvarInt("rando_debug_loadout") == 1)
-        iPrintLnBold("^5Rando beta-002 loaded! ^2Interval: " + getDvarInt("rando_interval") + "s | Attachments: ^2" + getDvarInt("rando_attachments"));
+        iPrintLnBold("^5Rando loaded! ^2Interval: " + getDvarInt("rando_interval") + "s | Attachments: ^2" + getDvarInt("rando_attachments"));
 
     if (getDvarInt("rando_attachments") > 2)
         setDvar("rando_attachments", 2);
@@ -191,6 +192,7 @@ OnPlayerSpawned()
 
 //        if (getDvarInt("rando_debug_loadout") == 1)
 //            self thread debugPrintLoadout(level.currentLoadout);
+//        self thread uiNextLoadoutPreview(false, 3);
     }
 }
 
@@ -270,6 +272,9 @@ intervalSystem()
 
             level thread uiPersistentCountdownTimer(interval);
 
+//            // Show simple image preview of next loadout
+            self thread uiNextLoadoutPreview(false, 3);
+
             for (timeLeft = interval; timeLeft > 0; timeLeft--)
                 wait 1;
 
@@ -302,6 +307,7 @@ watchForRoundEnd(label, number)
     level waittill("round_ended");
     if (isDefined(label)) label destroy();
     if (isDefined(number)) number destroy();
+    level thread destroyNextPreview();
 }
 
 watchForGameEnd(label, number)
@@ -309,6 +315,7 @@ watchForGameEnd(label, number)
     level waittill("game_ended");
     if (isDefined(label)) label destroy();
     if (isDefined(number)) number destroy();
+    level thread destroyNextPreview();
 }
 
 
@@ -375,10 +382,13 @@ getRandomLoadout()
 
         loadout.perk4 = level.perk4Pool[randomInt(level.perk4Pool.size)];
     }
-    // ====================== MAIN WEAPONS ======================
+
+    // ====================== MAIN WEAPONS + OMA LOGIC ======================
     amount = getDvarInt("rando_mains");
     if (amount < 1) amount = 1;
     if (amount > level.weaponPool.size) amount = level.weaponPool.size;
+
+    omaMode = getDvarInt("rando_oma_mode");
 
     loadout.mainWeapons = [];
     keys = getArrayKeys(level.weaponPool);
@@ -386,7 +396,13 @@ getRandomLoadout()
     for (i = 0; i < keys.size; i++)
         temp[temp.size] = keys[i];
 
-    for (i = 0; i < amount && temp.size > 0; i++)
+    // Determine how many normal guns to pick
+    gunsToPick = amount;
+
+    if (omaMode == 1 && isDefined(loadout.perk1) && loadout.perk1 == "specialty_onemanarmy")
+        gunsToPick = amount - 1;   // Vanilla: replace last weapon slot with OMA
+
+    for (i = 0; i < gunsToPick && temp.size > 0; i++)
     {
         idx = randomInt(temp.size);
         weaponKey = temp[idx];
@@ -405,10 +421,8 @@ getRandomLoadout()
             attachCount += 1;
         if (hasBlingPro)
             attachCount += 1;
-        if (attachCount > 2)
-            attachCount = 2;
+        if (attachCount > 2) attachCount = 2;
 
-        // === Pure table-driven selection ===
         attachments = selectValidAttachments(baseItem, attachCount);
 
         weaponDef = scripts\_items::createWeaponDef(baseItem, attachments, undefined);
@@ -420,6 +434,17 @@ getRandomLoadout()
             if (j != idx)
                 newTemp[newTemp.size] = temp[j];
         temp = newTemp;
+    }
+
+    // ====================== ONE MAN ARMY WEAPON ======================
+    if (omaMode > 0 && isDefined(loadout.perk1) && loadout.perk1 == "specialty_onemanarmy")
+    {
+        omaItem = level.weaponPool["onemanarmy_mp"];
+        if (isDefined(omaItem))
+        {
+            omaDef = scripts\_items::createWeaponDef(omaItem, [], undefined);
+            loadout.mainWeapons[loadout.mainWeapons.size] = omaDef;
+        }
     }
 
     loadout.lethal   = level.lethalPool[randomInt(level.lethalPool.size)];
@@ -629,7 +654,7 @@ uiPersistentCountdownTimer(totalTime)
     label.horzAlign = "center";
     label.vertAlign = "bottom";
     label.x = 0;
-    label.y = -60;
+    label.y = -75;
     label.font = "default";
     label.fontScale = 1.1;
     label.color = (1, 1, 1);
@@ -643,7 +668,7 @@ uiPersistentCountdownTimer(totalTime)
     number.horzAlign = "center";
     number.vertAlign = "bottom";
     number.x = 0;
-    number.y = -40;
+    number.y = -55;
     number.font = "objective";
     number.fontScale = 2.0;
     number.color = (1, 1, 1);
@@ -697,7 +722,11 @@ uiPersistentCountdownTimer(totalTime)
                     player playLocalSound("mp_defcon_text_slide");
         }
         if (timeLeft == notifyAt)
-            debugPrintLoadout(level.nextLoadout, true);
+        {
+            if (getDvarInt("rando_debug_loadout") == 1)
+                debugPrintLoadout(level.nextLoadout, true);
+            self thread uiNextLoadoutPreview(true);   // fade in over 0.5 seconds
+        }
 
         wait 1;
     }
@@ -710,6 +739,176 @@ uiPersistentCountdownTimer(totalTime)
             player playLocalSound("mp_ingame_summary");
 }
 
+
+
+
+uiNextLoadoutPreview(isNext, duration)
+{
+    level notify("newLoadoutPreview");
+    level endon("newLoadoutPreview");
+    level endon("game_ended");
+    level endon("round_ended");
+
+    // Clean up any previous preview
+    if (isDefined(level.nextPreviewHuds))
+    {
+        foreach (hud in level.nextPreviewHuds)
+            if (isDefined(hud)) hud destroy();
+    }
+    level.nextPreviewHuds = [];
+
+    // Choose correct loadout
+    loadout = undefined;
+    if (isNext)
+        loadout = level.nextLoadout;
+    else
+        loadout = level.currentLoadout;
+
+    if (!isDefined(loadout))
+        return;
+
+    // Set default duration
+    if (!isDefined(duration))
+    {
+        if (isNext)
+            duration = 9999;   // next stays until round ends
+        else
+            duration = 4;      // current fades after 4 seconds
+    }
+
+    // ====================== ROW 1: MAINS + ATTACHMENTS ======================
+    row1Width = 0;
+    foreach (weaponDef in loadout.mainWeapons)
+    {
+        row1Width += 85;
+        if (isDefined(weaponDef.attachments))
+            row1Width += (weaponDef.attachments.size * 38);
+        row1Width += 30;
+    }
+    baseXRow1 = 20 - (row1Width / 2);
+    baseYRow1 = -120;
+
+    currentX = baseXRow1;
+    foreach (weaponDef in loadout.mainWeapons)
+    {
+        wIcon = newHudElem();
+        wIcon.alignX = "left"; wIcon.alignY = "bottom";
+        wIcon.horzAlign = "center"; wIcon.vertAlign = "bottom";
+        wIcon.x = currentX; wIcon.y = baseYRow1;
+        wIcon.sort = 2;
+        if (isNext)
+            wIcon.alpha = 0;
+        else
+            wIcon.alpha = 0.95;
+        wIcon setShader(weaponDef.item.image, 80, 40);
+        level.nextPreviewHuds[level.nextPreviewHuds.size] = wIcon;
+
+        currentX += 85;
+
+        if (isDefined(weaponDef.attachments))
+        {
+            foreach (att in weaponDef.attachments)
+            {
+                aIcon = newHudElem();
+                aIcon.alignX = "left"; aIcon.alignY = "bottom";
+                aIcon.horzAlign = "center"; aIcon.vertAlign = "bottom";
+                aIcon.x = currentX; aIcon.y = baseYRow1 + 4;
+                aIcon.sort = 3;
+                if (isNext)
+                    aIcon.alpha = 0;
+                else
+                    aIcon.alpha = 0.95;
+                aIcon setShader(att.image, 34, 34);
+                level.nextPreviewHuds[level.nextPreviewHuds.size] = aIcon;
+                currentX += 38;
+            }
+        }
+        currentX += 30;
+    }
+
+    // ====================== ROW 2: OFFHANDS + PERKS (Only for Next) ======================
+    if (isNext)
+    {
+        row2Items = [];
+        if (isDefined(loadout.lethal))   row2Items[row2Items.size] = loadout.lethal;
+        if (isDefined(loadout.tactical)) row2Items[row2Items.size] = loadout.tactical;
+
+        if (isDefined(loadout.perk1Pro))      row2Items[row2Items.size] = loadout.perk1Pro;
+        else if (isDefined(loadout.perk1))    row2Items[row2Items.size] = loadout.perk1;
+        if (isDefined(loadout.perk2Pro))      row2Items[row2Items.size] = loadout.perk2Pro;
+        else if (isDefined(loadout.perk2))    row2Items[row2Items.size] = loadout.perk2;
+        if (isDefined(loadout.perk3Pro))      row2Items[row2Items.size] = loadout.perk3Pro;
+        else if (isDefined(loadout.perk3))    row2Items[row2Items.size] = loadout.perk3;
+        if (isDefined(loadout.perk4))         row2Items[row2Items.size] = loadout.perk4;
+
+        if (row2Items.size > 0)
+        {
+            itemWidth = 26;
+            spacing = 35;
+            totalW = (row2Items.size * itemWidth) + ((row2Items.size - 1) * (spacing - itemWidth));
+
+            baseXRow2 = 0 - (totalW / 2);
+            baseYRow2 = baseYRow1 + 30;
+
+            currentX = baseXRow2;
+            foreach (itemName in row2Items)
+            {
+                item = scripts\_items::getItemByName(itemName);
+                if (!isDefined(item) || !isDefined(item.image)) continue;
+
+                icon = newHudElem();
+                icon.alignX = "left"; icon.alignY = "bottom";
+                icon.horzAlign = "center"; icon.vertAlign = "bottom";
+                icon.x = currentX; icon.y = baseYRow2;
+                icon.sort = 2;
+                icon.alpha = 0;
+                icon setShader(item.image, itemWidth, itemWidth);
+                level.nextPreviewHuds[level.nextPreviewHuds.size] = icon;
+
+                currentX += spacing;
+            }
+        }
+    }
+
+    // ====================== FADE IN (only for Next) ======================
+    if (isNext)
+    {
+        foreach (hud in level.nextPreviewHuds)
+        {
+            hud fadeOverTime(0.5);
+            hud.alpha = 0.95;
+        }
+    }
+
+    // ====================== AUTO FADE OUT (Current mode only) ======================
+    if (!isNext && duration > 0)
+    {
+        wait duration;
+        foreach (hud in level.nextPreviewHuds)
+        {
+            if (isDefined(hud))
+            {
+                hud fadeOverTime(0.6);
+                hud.alpha = 0;
+            }
+        }
+        wait 0.7;
+        destroyNextPreview();
+    }
+}
+
+destroyNextPreview()
+{
+    if (isDefined(level.nextPreviewHuds))
+    {
+        foreach (hud in level.nextPreviewHuds)
+        {
+            if (isDefined(hud))
+                hud destroy();
+        }
+        level.nextPreviewHuds = undefined;
+    }
+}
 
 
 updatePerkIcons(loadout)
