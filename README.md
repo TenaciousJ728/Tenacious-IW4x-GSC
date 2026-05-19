@@ -37,15 +37,18 @@ A loadout randomizer.
 - `rando_interval_reruns` =
   - `0` (default) Restart interval countdown indefinitely
   - [integer value] The finite amount of times to rerun the interval countdown
+- `rando_oma_mode` =
+  - `1` (default) Rolling One Man Army replaces a main weapon for the OMA backpack. Vanilla-ish behavior.
+  - [other integer value] Rolling OMA gives backpack in addition to random loadout
 - `rando_debug_loadout` = Prints debug lines showing the current loadout in raw form to the game's console
 - `rando_debug_skip_enforcement` = Skips player loadout checks and class enforcement at first 15 seconds of round. Handy for buggy rando selection.
 
 ## To-do
 - [x] Fix/rewrite multi-attachment selection.
-- [ ] Make next-class preview pretty.
+- [x] Make next-class preview pretty.
 - [ ] Select player model based on selected primary main. (Gillie for snipers/heavy armor for shield)
 - [ ] Make a rando mode for different classes per player.
 - [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode.
 - [x] End class enforcement on using OMA. Or use `changed_kit` notify?
-- [ ] Bind OMA to key instead of as third weapon?
+~~- [ ] Bind OMA to key instead of as third weapon?~~
 - [ ] Kick player out of OMA menu at countdown?
