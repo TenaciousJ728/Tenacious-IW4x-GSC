@@ -10,7 +10,8 @@ A loadout randomizer.
 - Works for all game modes.
 - Randomizes weapons, equipment, and perks. Either per round, or also after a set interval.
 - Prevents players from switching classes within a round's first 15 seconds.
-- Displays the current loadout's perks at all times.
+- Displays current loadout's perks at all times.
+- Shows preview of next random loadout (if applicable) when imminent.
 - Bots-friendly! This script won't crash the server upon spawning bots, even with a full load of bots.
 
 ## Installation
@@ -52,3 +53,5 @@ A loadout randomizer.
 - [x] End class enforcement on using OMA. Or use `changed_kit` notify?
 - [ ] Have killstreak rewards randomly selected per game?
 - [ ] Kick player out of OMA menu at countdown?
+- [ ] Add HUD element toggles
+- [ ] Optimize script flows
