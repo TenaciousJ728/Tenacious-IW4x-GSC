@@ -7,11 +7,12 @@ A loadout randomizer.
 <img width="1574" height="630" alt="bleh" src="https://github.com/user-attachments/assets/3eff065a-a8fe-48f7-8f92-de7d8326c4fe" />
 
 ## Features
-- Works for all game modes.
+- Works in all game modes
 - Randomizes weapons, equipment, and perks. Either per round, or also after a set interval.
 - Prevents players from switching classes within a round's first 15 seconds
 - Displays current loadout's perks at all times
 - Shows preview of next random loadout (if applicable) when imminent
+- Bypasses rank/challenges requirements for things like weapon unlocks, Pro perks, and gillie suit. 
 - Bots-friendly! This script won't crash the server upon spawning bots, even with a full load of bots.
 
 ## Installation
@@ -48,6 +49,7 @@ A loadout randomizer.
 - [x] Fix/rewrite multi-attachment selection
 - [x] Make next-class preview pretty
 - [x] Select player model based on selected primary main. (Gillie for snipers/heavy armor for shield)
+- [ ] Select random weapon camo where applicable
 - [ ] Make a rando mode for different classes per player, per life. (with weapon drops enabled)
 - [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode
 - [x] End class enforcement on using OMA. Or use `changed_kit` notify?
