@@ -9,15 +9,15 @@ A loadout randomizer.
 ## Features
 - Works for all game modes.
 - Randomizes weapons, equipment, and perks. Either per round, or also after a set interval.
-- Prevents players from switching classes within a round's first 15 seconds.
-- Displays current loadout's perks at all times.
-- Shows preview of next random loadout (if applicable) when imminent.
+- Prevents players from switching classes within a round's first 15 seconds
+- Displays current loadout's perks at all times
+- Shows preview of next random loadout (if applicable) when imminent
 - Bots-friendly! This script won't crash the server upon spawning bots, even with a full load of bots.
 
 ## Installation
 1. Place `rando.gsc` in your `\userraw\*`
 2. Extract [these dependencies](https://github.com/TenaciousJ728/IW4x-MP-GSC/raw/refs/heads/main/scriptDependencies.zip) and place them with rando.gsc
-3. Edit your server.cfg and add `set rando_enable 1`.
+3. Edit your server.cfg and add `set rando_enable 1`
 4. Start server
 
 ### dvars
@@ -45,13 +45,15 @@ A loadout randomizer.
 - `rando_debug_skip_enforcement` = Skips player loadout checks and class enforcement at first 15 seconds of round. Handy for buggy rando selection.
 
 ## To-do
-- [x] Fix/rewrite multi-attachment selection.
-- [x] Make next-class preview pretty.
-- [ ] Select player model based on selected primary main. (Gillie for snipers/heavy armor for shield)
+- [x] Fix/rewrite multi-attachment selection
+- [x] Make next-class preview pretty
+- [x] Select player model based on selected primary main. (Gillie for snipers/heavy armor for shield)
 - [ ] Make a rando mode for different classes per player, per life. (with weapon drops enabled)
-- [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode.
+- [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode
 - [x] End class enforcement on using OMA. Or use `changed_kit` notify?
 - [ ] Have killstreak rewards randomly selected per game?
+- [ ] Add incendiary grenades
 - [ ] Kick player out of OMA menu at countdown?
 - [ ] Add HUD element toggles
+- [ ] Use proper includes and make dependencies drop-in
 - [ ] Optimize script flows
