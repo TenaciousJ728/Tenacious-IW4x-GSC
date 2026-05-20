@@ -1,11 +1,11 @@
 // ================================================
 // IW4x mp "rando"
-// beta-004
+// beta-005
 // by Tenacious J
 // 
 // A (single-class) loadout randomizer.
 // Suitable for all modes.
-// Compatiple with bots.
+// Compatible with bots.
 // ================================================
 
 #include scripts\_utility;
@@ -447,6 +447,12 @@ getRandomLoadout()
         }
     }
 
+    // Store first weapon class for player model
+    if (isDefined(loadout.mainWeapons) && loadout.mainWeapons.size > 0)
+        loadout.weaponClass = loadout.mainWeapons[0].item.class;
+    else
+        loadout.weaponClass = "assault";
+
     loadout.lethal   = level.lethalPool[randomInt(level.lethalPool.size)];
     loadout.tactical = level.tacticalPool[randomInt(level.tacticalPool.size)];
 
@@ -503,6 +509,47 @@ selectValidAttachments(baseItem, attachCount)
 
     // Fallback - return whatever we managed to get (should be rare)
 //    return selected;
+}
+
+// ====================== SAFE PLAYER MODEL BASED ON WEAPON CLASS ======================
+setPlayerModelForWeaponClass(weaponClass)
+{
+    self endon("disconnect");
+    self endon("death");
+
+    if (!isDefined(self.team) || self.team == "spectator")
+        return;
+
+    // Important: detach everything first to avoid bone conflicts
+    self detachAll();
+
+    team = self.team;
+
+    switch (weaponClass)
+    {
+        case "assault":
+            [[game[team + "_model"]["ASSAULT"]]]();
+            break;
+        case "smg":
+            [[game[team + "_model"]["SMG"]]]();
+            break;
+        case "shotgun":
+            [[game[team + "_model"]["SHOTGUN"]]]();
+            break;
+        case "sniper":
+            [[game[team + "_model"]["GHILLIE"]]]();
+//          [[game[team + "_model"]["SNIPER"]]]();
+            break;
+        case "lmg":
+            [[game[team + "_model"]["LMG"]]]();
+            break;
+        case "riot":
+            [[game[team + "_model"]["RIOT"]]]();
+            break;
+        default:
+            [[game[team + "_model"]["ASSAULT"]]](); // fallback
+            break;
+    }
 }
 
 
@@ -572,7 +619,15 @@ applyRandomLoadout(loadout, isEnforcement)
         self thread debugPrintLoadout(level.currentLoadout, false);
     self updatePerkIcons(loadout);
 
+
     wait 0.05;
+    // ====================== PLAYER MODEL ======================
+    if (isDefined(loadout.weaponClass))
+    {
+        wait 0.05;  // small delay helps avoid spawn conflict
+        self setPlayerModelForWeaponClass(loadout.weaponClass);
+    }
+
     if (getDvarInt("rando_switch_immediate") == 1)
         self switchToWeaponImmediate(loadout.mainWeapons[0].fullName);
     else 
