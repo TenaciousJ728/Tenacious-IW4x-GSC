@@ -1,9 +1,9 @@
 // ================================================
 // IW4x mp "rando"
-// beta-006
+// beta-006a
 // by Tenacious J
 // 
-// A (single-class) loadout randomizer.
+// A (single-class) loadout randomizer. (for now)
 // Suitable for all modes.
 // Compatible with bots.
 // ================================================
@@ -25,7 +25,8 @@ init()
     setDvarIfUninitialized("rando_debug_loadout", 0);
     setDvarIfUninitialized("rando_debug_camo", 0);
     setDvarIfUninitialized("rando_debug_skip_enforcement", 0);
-    //For Muhlex script
+    //For Muhlex scripts
+    setDvarIfUninitialized("scr_allow_classchange", 0);
     setDvarIfUninitialized("scr_death_drop_weapon", 0);
 
 
@@ -186,11 +187,8 @@ OnPlayerSpawned()
     for (;;)
     {
         self waittill("spawned");
-
-        wait 0.05;
-
+//        wait 0.05;
         self thread applyRandomLoadout(level.currentLoadout, false);
-
 //        self thread uiNextLoadoutPreview(false, 3);
     }
 }
@@ -198,19 +196,19 @@ OnPlayerSpawned()
 OnPrematchOver()
 {
     level waittill("prematch_over");
-    level thread watchForNewRounds();
+//    level thread watchForNewRounds();
 }
 
-watchForNewRounds()
-{
-    level endon("game_ended");
-    for (;;)
-    {
-        level waittill("round_ended");
-        wait 0.5;
-        level.currentLoadout = level getRandomLoadout();
-    }
-}
+//watchForNewRounds()
+//{
+//    level endon("game_ended");
+//    for (;;)
+//    {
+//        level waittill("round_ended");
+//        wait 0.5;
+//        level.currentLoadout = level getRandomLoadout();
+//    }
+//}
 
 startEnforcementSystem()
 {
@@ -735,6 +733,7 @@ playerPrintLoadout(loadout, prefix)
 
 
 
+// ====================== PERSISTENT BOTTOM-CENTER COUNTDOWN TIMER ======================
 uiPersistentCountdownTimer(totalTime)
 {
     level notify("newCountdownTimer");
@@ -742,8 +741,20 @@ uiPersistentCountdownTimer(totalTime)
     level endon("game_ended");
     level endon("round_ended");
 
+    // === CLEANUP OLD TIMER HUDs ===
+    if (isDefined(level.countdownLabel)) 
+        level.countdownLabel destroy();
+    if (isDefined(level.countdownNumber))
+    {
+        level.countdownNumber destroy();
+        foreach (player in level.players)
+        if (isDefined(player) && isAlive(player))
+            player playLocalSound("mp_ingame_summary");
+    }
+
     notifyAt = getDvarInt("rando_notify_at_seconds");
 
+    // Create new HUD elements
     label = newHudElem();
     label.alignX = "center";
     label.alignY = "bottom";
@@ -757,6 +768,7 @@ uiPersistentCountdownTimer(totalTime)
     label.glowAlpha = 0;
     label.alpha = 1;
     label setText("Next class in");
+    level.countdownLabel = label;
 
     number = newHudElem();
     number.alignX = "center";
@@ -770,6 +782,7 @@ uiPersistentCountdownTimer(totalTime)
     number.color = (1, 1, 1);
     number.glowAlpha = 0;
     number.alpha = 1;
+    level.countdownNumber = number;
 
     level thread watchForRoundEnd(label, number);
     level thread watchForGameEnd(label, number);
@@ -795,6 +808,7 @@ uiPersistentCountdownTimer(totalTime)
             number.glowAlpha = 0;
         }
 
+        // Fade logic for label
         if (timeLeft > totalTime - 5 && label.alpha < 1)
         {
             label fadeOverTime(0.4);
@@ -817,22 +831,20 @@ uiPersistentCountdownTimer(totalTime)
                 if (isDefined(player) && isAlive(player))
                     player playLocalSound("mp_defcon_text_slide");
         }
+
         if (timeLeft == notifyAt)
         {
             if (getDvarInt("rando_debug_loadout") == 1)
                 debugPrintLoadout(level.nextLoadout, true);
-            self thread uiNextLoadoutPreview(true);   // fade in over 0.5 seconds
+            level thread uiNextLoadoutPreview(true);
         }
 
         wait 1;
     }
 
+    // Final cleanup
     if (isDefined(label)) label destroy();
     if (isDefined(number)) number destroy();
-
-    foreach (player in level.players)
-        if (isDefined(player) && isAlive(player))
-            player playLocalSound("mp_ingame_summary");
 }
 
 
