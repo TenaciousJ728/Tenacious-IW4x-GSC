@@ -1,6 +1,6 @@
 // ================================================
 // IW4x mp "rando"
-// beta-005
+// beta-006
 // by Tenacious J
 // 
 // A (single-class) loadout randomizer.
@@ -21,8 +21,9 @@ init()
     setDvarIfUninitialized("rando_notify_at_seconds", 9);
     setDvarIfUninitialized("rando_oma_mode", 1);
     setDvarIfUninitialized("rando_switch_immediate", 0);
-    setDvarIfUninitialized("rando_debug_loadout", 0);
     setDvarIfUninitialized("rando_debug_items", 0);
+    setDvarIfUninitialized("rando_debug_loadout", 0);
+    setDvarIfUninitialized("rando_debug_camo", 0);
     setDvarIfUninitialized("rando_debug_skip_enforcement", 0);
     //For Muhlex script
     setDvarIfUninitialized("scr_death_drop_weapon", 0);
@@ -188,10 +189,8 @@ OnPlayerSpawned()
 
         wait 0.05;
 
-        self applyRandomLoadout(level.currentLoadout, false);
+        self thread applyRandomLoadout(level.currentLoadout, false);
 
-//        if (getDvarInt("rando_debug_loadout") == 1)
-//            self thread debugPrintLoadout(level.currentLoadout);
 //        self thread uiNextLoadoutPreview(false, 3);
     }
 }
@@ -272,7 +271,7 @@ intervalSystem()
 
             level thread uiPersistentCountdownTimer(interval);
 
-//            // Show simple image preview of next loadout
+            // Show simple image preview of next loadout
             self thread uiNextLoadoutPreview(false, 3);
 
             for (timeLeft = interval; timeLeft > 0; timeLeft--)
@@ -286,7 +285,7 @@ intervalSystem()
 //                if (isDefined(player) && isAlive(player))
                 if (isDefined(player))
                 {
-                    player applyRandomLoadout(level.currentLoadout, false);
+                    player thread applyRandomLoadout(level.currentLoadout, false);
                     if (getDvarInt("rando_debug_loadout") == 1)
                         player iPrintLnBold("^2Class changed mid-round!");
                 }
@@ -345,7 +344,7 @@ monitorClassEnforcement()
             mismatch = true;
 
         if (mismatch)
-            self applyRandomLoadout(level.currentLoadout, true);
+            self thread applyRandomLoadout(level.currentLoadout, true);
     }
 }
 
@@ -425,8 +424,16 @@ getRandomLoadout()
 
         attachments = selectValidAttachments(baseItem, attachCount);
 
-        weaponDef = scripts\_items::createWeaponDef(baseItem, attachments, undefined);
+        // ======== CAMO: Simple random camo (correct pool access) ========
+        items = scripts\_items::getItems();           // safe way to get the pool
+        camo = arrayGetRandom(items["camo"]);
+
+        weaponDef = scripts\_items::createWeaponDef(baseItem, attachments, camo);
         loadout.mainWeapons[loadout.mainWeapons.size] = weaponDef;
+
+        // Debug print
+        if (getDvarInt("rando_debug_camo") == 1)
+            iPrintLn("^5Weapon: ^2" + weaponDef.fullName + " ^7| Camo: ^3" + camo.name + " (ID: " + camo.id + ")");
 
         // Remove used weapon
         newTemp = [];
@@ -511,6 +518,122 @@ selectValidAttachments(baseItem, attachCount)
 //    return selected;
 }
 
+
+
+applyRandomLoadout(loadout, isEnforcement)
+{
+    self endon("disconnect");
+    self endon("death");
+
+    self maps\mp\_utility::_clearPerks();
+    foreach (weapon in arrayCombine(self getWeaponsListPrimaries(), self getWeaponsListOffhands()))
+        self takeWeapon(weapon);
+
+    // ====================== PERKS ======================
+    if (getDvarInt("rando_perks_mode") != 0)
+    {
+        if (!isEnforcement)
+            self maps\mp\perks\_perks::givePerk(loadout.perk4);
+
+        self maps\mp\perks\_perks::givePerk(loadout.perk1);
+        if (isDefined(loadout.perk1Pro))
+            self maps\mp\perks\_perks::givePerk(loadout.perk1Pro);
+
+        self maps\mp\perks\_perks::givePerk(loadout.perk2);
+        if (isDefined(loadout.perk2Pro))
+            self maps\mp\perks\_perks::givePerk(loadout.perk2Pro);
+
+        self maps\mp\perks\_perks::givePerk(loadout.perk3);
+        if (isDefined(loadout.perk3Pro))
+            self maps\mp\perks\_perks::givePerk(loadout.perk3Pro);
+    }
+
+    // ====================== WEAPONS ======================
+    if (isDefined(loadout.mainWeapons))
+    {
+        foreach (def in loadout.mainWeapons)
+            self scripts\_items::give(def);
+    }
+
+    // ====================== OFFHANDS ======================
+    if (loadout.lethal == "frag_grenade_mp")
+    {
+        self giveWeapon(loadout.lethal);
+        self SetOffhandPrimaryClass("frag");
+    }
+    else if (loadout.lethal == "throwingknife_mp")
+    {
+        self SetOffhandPrimaryClass("throwingknife");
+        self maps\mp\perks\_perks::givePerk(loadout.lethal);
+    }
+    else if (loadout.lethal == "semtex_mp" || loadout.lethal == "c4_mp" || loadout.lethal == "claymore_mp")
+    {
+        self SetOffhandPrimaryClass("other");
+        self giveWeapon(loadout.lethal);
+    }
+    else
+    {
+        self SetOffhandPrimaryClass("other");
+        self maps\mp\perks\_perks::givePerk(loadout.lethal);
+    }
+
+    self giveWeapon(loadout.tactical);
+    if (loadout.tactical == "flash_grenade_mp")
+    {
+        self SetOffhandSecondaryClass("flash");
+        self giveWeapon(loadout.tactical);
+    }
+    else
+    {
+        self SetOffhandSecondaryClass("smoke");
+        self giveWeapon(loadout.tactical);
+    }
+
+    if (loadout.perk1 == "specialty_onemanarmy")
+        self giveWeapon("onemanarmy_mp");
+
+    // ====================== WEAPON SWITCH (with safety) ======================
+    if (isDefined(loadout.mainWeapons) && loadout.mainWeapons.size > 0)
+    {
+        primaryWeapon = loadout.mainWeapons[0].fullName;
+
+        if (getDvarInt("rando_switch_immediate") == 1)
+            self switchToWeaponImmediate(primaryWeapon);
+        else
+            self switchToWeapon(primaryWeapon);
+
+        // Non-blocking safety retries
+        self thread safeWeaponSwitch(primaryWeapon);
+    }
+
+    self maps\mp\gametypes\_weapons::updateMoveSpeedScale("primary");
+
+    // ====================== PLAYER MODEL ======================
+    if (isDefined(loadout.weaponClass))
+    {
+//        wait 0.05;
+        self setPlayerModelForWeaponClass(loadout.weaponClass);
+    }
+
+    if (getDvarInt("rando_debug_loadout") == 1)
+        self thread debugPrintLoadout(level.currentLoadout, false);
+
+    self updatePerkIcons(loadout);
+}
+
+safeWeaponSwitch(weaponName)
+{
+    self endon("disconnect");
+    self endon("death");
+
+    for (i = 0; i < 10; i++)
+    {
+        if (self getCurrentWeapon() != weaponName && self hasWeapon(weaponName))
+            self switchToWeaponImmediate(weaponName);
+        wait 0.05;
+    }
+}
+
 // ====================== SAFE PLAYER MODEL BASED ON WEAPON CLASS ======================
 setPlayerModelForWeaponClass(weaponClass)
 {
@@ -552,88 +675,6 @@ setPlayerModelForWeaponClass(weaponClass)
     }
 }
 
-
-
-applyRandomLoadout(loadout, isEnforcement)
-{
-    self maps\mp\_utility::_clearPerks();
-    foreach (weapon in arrayCombine(self getWeaponsListPrimaries(), self getWeaponsListOffhands()))
-        self takeWeapon(weapon);
-
-    if (getDvarInt("rando_perks_mode") != 0)
-    {
-        if (!isEnforcement)
-            self maps\mp\perks\_perks::givePerk(loadout.perk4);
-        self maps\mp\perks\_perks::givePerk(loadout.perk1);
-        if (isDefined(loadout.perk1Pro))
-            self maps\mp\perks\_perks::givePerk(loadout.perk1Pro);
-        self maps\mp\perks\_perks::givePerk(loadout.perk2);
-        if (isDefined(loadout.perk2Pro))
-            self maps\mp\perks\_perks::givePerk(loadout.perk2Pro);
-        self maps\mp\perks\_perks::givePerk(loadout.perk3);
-        if (isDefined(loadout.perk3Pro))
-            self maps\mp\perks\_perks::givePerk(loadout.perk3Pro);
-    }
-
-    if (isDefined(loadout.mainWeapons))
-        foreach (def in loadout.mainWeapons)
-            self scripts\_items::give(def);
-
-    if (loadout.lethal == "frag_grenade_mp")
-    {
-        self giveWeapon(loadout.lethal);
-        self SetOffhandPrimaryClass("frag");
-    }
-    else if (loadout.lethal == "throwingknife_mp")
-    {
-        self SetOffhandPrimaryClass("throwingknife");
-        self maps\mp\perks\_perks::givePerk(loadout.lethal);
-    }
-    else if (loadout.lethal == "semtex_mp" || loadout.lethal == "c4_mp" || loadout.lethal == "claymore_mp")
-    {
-        self SetOffhandPrimaryClass("other");
-        self giveWeapon(loadout.lethal);
-    }
-    else
-    {
-        self SetOffhandPrimaryClass("other");
-        self maps\mp\perks\_perks::givePerk(loadout.lethal);
-    }
-
-    self giveWeapon(loadout.tactical);
-    if (loadout.tactical == "flash_grenade_mp")
-    {
-        self SetOffhandSecondaryClass("flash");
-        self giveWeapon(loadout.tactical);
-    }
-    else
-    {
-        self SetOffhandSecondaryClass("smoke");
-        self giveWeapon(loadout.tactical);
-    }
-
-//    wait 0.1;
-    if (loadout.perk1 == "specialty_onemanarmy")
-        self giveWeapon("onemanarmy_mp");
-    if (getDvarInt("rando_debug_loadout") == 1)
-        self thread debugPrintLoadout(level.currentLoadout, false);
-    self updatePerkIcons(loadout);
-
-
-    wait 0.05;
-    // ====================== PLAYER MODEL ======================
-    if (isDefined(loadout.weaponClass))
-    {
-        wait 0.05;  // small delay helps avoid spawn conflict
-        self setPlayerModelForWeaponClass(loadout.weaponClass);
-    }
-
-    if (getDvarInt("rando_switch_immediate") == 1)
-        self switchToWeaponImmediate(loadout.mainWeapons[0].fullName);
-    else 
-        self switchToWeapon(loadout.mainWeapons[0].fullName);
-    self maps\mp\gametypes\_weapons::updateMoveSpeedScale("primary");
-}
 
 debugPrintLoadout(loadout, isNextLoadout)
 {
@@ -828,7 +869,7 @@ uiNextLoadoutPreview(isNext, duration)
         if (isNext)
             duration = 9999;   // next stays until round ends
         else
-            duration = 4;      // current fades after 4 seconds
+            duration = 5;      // current fades after 4 seconds
     }
 
     // ====================== ROW 1: MAINS + ATTACHMENTS ======================
@@ -984,7 +1025,7 @@ updatePerkIcons(loadout)
 
     perkList = [];
 
-    // === PERK 3 (top) ===
+    //======== PERK 3 (top) ========
     if (isDefined(loadout.perk3Pro))
     {
         if (loadout.perk3Pro == "specialty_falldamage") perkList[0] = "specialty_commando_upgrade";
@@ -1004,7 +1045,7 @@ updatePerkIcons(loadout)
         else perkList[0] = loadout.perk3;
     }
 
-    // === PERK 2 ===
+    //======== PERK 2 ========
     if (isDefined(loadout.perk2Pro))
     {
         if (loadout.perk2Pro == "specialty_armorpiercing") perkList[1] = "specialty_bulletdamage_upgrade";
@@ -1020,7 +1061,7 @@ updatePerkIcons(loadout)
         else perkList[1] = loadout.perk2;
     }
 
-    // === PERK 1 ===
+    //======== PERK 1 ========
     if (isDefined(loadout.perk1Pro))
     {
         if (loadout.perk1Pro == "specialty_fastmantle") perkList[2] = "specialty_marathon_upgrade";
@@ -1036,7 +1077,7 @@ updatePerkIcons(loadout)
         else perkList[2] = loadout.perk1;
     }
 
-    // === PERK 4 (bottom) ===
+    //======== PERK 4 (bottom) ========
     if (isDefined(loadout.perk4))
     {
         if (loadout.perk4 == "specialty_combathigh") perkList[3] = "specialty_painkiller";
