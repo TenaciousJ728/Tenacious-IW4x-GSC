@@ -46,16 +46,17 @@ A loadout randomizer.
 - `rando_debug_skip_enforcement` = Skips player loadout checks and class enforcement at first 15 seconds of round. Handy for buggy rando selection.
 
 ## To-do
+- [ ] Make interval reruns indefinite at `-1`
 - [x] Fix/rewrite multi-attachment selection
 - [x] Make next-class preview pretty
 - [x] Select player model based on selected primary main. (Gillie for snipers/heavy armor for shield)
-- [ ] Select random weapon camo where applicable
+- [x] Select random weapon camo where applicable
 - [ ] Make a rando mode for different classes per player, per life. (with weapon drops enabled)
 - [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode
 - [x] End class enforcement on using OMA. Or use `changed_kit` notify?
 - [ ] Have killstreak rewards randomly selected per game?
 - [ ] Add incendiary grenades
 - [ ] Kick player out of OMA menu at countdown?
-- [ ] Add HUD element toggles
-- [ ] Use proper includes and make dependencies drop-in
+- [ ] More dvar toggles (interval timer, camo mode, etc.)
+- [ ] Pack with dependencies as IWD file, update [#Installation](#Installation).
 - [ ] Optimize script flows
