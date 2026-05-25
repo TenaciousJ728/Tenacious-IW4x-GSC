@@ -52,8 +52,18 @@ A loadout randomizer.
 - [ ] Have killstreak rewards randomly selected per game?
 - [ ] Add incendiary grenades
 - [ ] Kick player out of OMA menu at countdown?
-
-# Tourney
 - [ ] More dvar toggles (interval timer, camo mode, etc.)
 - [x] Pack with dependencies as IWD file, update [#Installation](#Installation).
 - [ ] Optimize script flows
+
+# What's next?
+
+### Tourney
+A tournament organizing script
+- Keep track of players by IP, stores team data and scores across games.
+- Once teams have been organized, keep the teams locked throughout games, keeping players in their proper teams.
+- Gather players in a friendly lobby-style game while organizing before sending them to a "real" game commanded by the admin.
+
+### Bing-bong
+A PSA messaging script
+- Notify players of iminent server maintenance, complete with countdown
