@@ -48,6 +48,7 @@ A loadout randomizer.
 - [ ] Make a rando mode for different classes per player, per life. (with weapon drops enabled)
 - [ ] Make perks HUD show very current life's perks for OMA swapping and new rando mode
 - [x] End class enforcement on using OMA. Or use `changed_kit` notify?
+- [ ] Have blacklists definable through dvars
 - [ ] Have killstreak rewards randomly selected per game?
 - [ ] Add incendiary grenades
 - [ ] Kick player out of OMA menu at countdown?
