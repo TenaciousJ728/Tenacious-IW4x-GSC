@@ -1,5 +1,5 @@
 # Tenacious-IW4x-GSC
-A drop-in-and-opt-in collection of GSC files made for IW4x dedicated server. Simply drop the IWD package and enable any of my script through your `server.cfg`.
+A drop-in-and-opt-in collection of GSC files made for IW4x dedicated server. Simply drop the IWD package and enable any of my scripts through your `server.cfg`.
 
 # Rando
 A loadout randomizer.
