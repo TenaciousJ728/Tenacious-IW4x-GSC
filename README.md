@@ -1,4 +1,4 @@
-# IW4x-MP-GSC
+# Tenacious-IW4x-GSC
 Personal add-on scripts for IW4x dedicated server.
 
 # Rando
