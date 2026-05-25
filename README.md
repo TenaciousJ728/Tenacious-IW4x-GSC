@@ -23,8 +23,8 @@ A loadout randomizer.
 ### dvars
 
 - `rando_enable` = 
-  - `0` Rando disabled (default)
-  - `1` Enable rando
+  - `0` Keep this script disabled (default)
+  - `1` Enable this script
 - `rando_perks_mode` = 
   - `0` Perks disabled
   - `1` Base perks only
