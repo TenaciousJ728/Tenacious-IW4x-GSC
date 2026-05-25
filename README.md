@@ -1,5 +1,5 @@
 # Tenacious-IW4x-GSC
-Personal add-on scripts for IW4x dedicated server.
+A drop-in-and-opt-in collection of GSC files made for IW4x dedicated server. Simply
 
 # Rando
 A loadout randomizer.
@@ -16,10 +16,9 @@ A loadout randomizer.
 - Bots-friendly! This script won't crash the server upon spawning bots, even with a full load of bots.
 
 ## Installation
-1. Place `rando.gsc` in your `\userraw\*`
-2. Extract [these dependencies](https://github.com/TenaciousJ728/IW4x-MP-GSC/raw/refs/heads/main/scriptDependencies.zip) and place them with rando.gsc
-3. Edit your server.cfg and add `set rando_enable 1`
-4. Start server
+1. Download `tenacious.iwd` [here](https://github.com/TenaciousJ728/Tenacious-IW4x-GSC/releases/tag/tenacious), place it in your MW2's `\userraw` directory
+2. Edit your server.cfg, add `set rando_enable 1` and any [dvars](#dvars) to taste
+3. Start server
 
 ### dvars
 
@@ -58,5 +57,5 @@ A loadout randomizer.
 - [ ] Add incendiary grenades
 - [ ] Kick player out of OMA menu at countdown?
 - [ ] More dvar toggles (interval timer, camo mode, etc.)
-- [ ] Pack with dependencies as IWD file, update [#Installation](#Installation).
+- [x] Pack with dependencies as IWD file, update [#Installation](#Installation).
 - [ ] Optimize script flows
