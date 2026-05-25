@@ -1,5 +1,5 @@
 # Tenacious-IW4x-GSC
-A drop-in-and-opt-in collection of GSC files made for IW4x dedicated server. Simply drop the IWD package and enable any of my scripts through your `server.cfg`.
+A drop-in-opt-in collection of GSC files made for IW4x dedicated server. Simply drop the IWD package and enable any of the scripts through your `server.cfg`.
 
 # Rando
 A loadout randomizer.
@@ -22,27 +22,22 @@ A loadout randomizer.
 
 ### dvars
 
-- `rando_enable` = 
-  - `0` Keep this script disabled (default)
-  - `1` Enable this script
-- `rando_perks_mode` = 
-  - `0` Perks disabled
-  - `1` Base perks only
-  - `2` Pro perks only (default)
-  - `3` Base and pro perks shuffled
-- `rando_mains_amount` = [integer value] (default: `2`) Amount of main weapons to give per loadout. I dare you to exceed 2!
-- `rando_attachments_max` = [integer value] (default: `1`, hard cap: `2`) Preferred amount of attachments to give with each weapon where possible
-- `rando_interval` =
-  - `0` Interval disabled
-  - [integer value] (default: `55`) Countdown interval in seconds before a new loadout is applied to players mid-game
-- `rando_interval_reruns` =
-  - `0` (default) Restart interval countdown indefinitely
-  - [integer value] The finite amount of times to rerun the interval countdown
-- `rando_oma_mode` =
-  - `1` (default) Rolling One Man Army replaces a main weapon for the OMA backpack. Vanilla-ish behavior.
-  - [other integer value] Rolling OMA gives backpack in addition to random loadout
-- `rando_debug_loadout` = Prints debug lines showing the current loadout in raw form to the game's console
-- `rando_debug_skip_enforcement` = Skips player loadout checks and class enforcement at first 15 seconds of round. Handy for buggy rando selection.
+|                  Name |           Value | Effect                                                                                         |
+|----------------------:|----------------:|:-----------------------------------------------------------------------------------------------|
+|          rando_enable |               0 | (default) Disable rando script                                                                 |
+|                       |               1 | Enable rando                                                                                   |
+|      rando_perks_mode |               0 | Skip giving perks                                                                              |
+|                       |               1 | Give base perks only                                                                           |
+|                       |               2 | (default) Give pro-tier perks                                                                  |
+|                       |               3 | Shuffle each perk slot with base and pro-tier perks                                                               |
+|           rando_mains | [integer value] | (default: 2) Preferred amount of main weapons to give per class                                |
+|     rando_attachments | [integer value] | (default: 1) Preferred amount of attachments per main weapon                                   |
+|        rando_interval |               0 | Mid-round class changing disabled                                                              |
+|                       | [integer value] | (default: 55) Countdown interval in seconds before a new class is applied to players mid-game  |
+| rando_interval_reruns |               0 | (default) Restart interval after countdown indefinitely                                        |
+|                       | [integer value] | The amount of times to restart interval timer after countdown                                  |
+|        rando_oma_mode |               1 | (default) One Man Army occupies a main weapon slot                                             |
+|                       |               2 | Give OMA backpack in addition to given class                                                   |
 
 ## To-do
 - [ ] Make interval reruns indefinite at `-1`
@@ -56,6 +51,8 @@ A loadout randomizer.
 - [ ] Have killstreak rewards randomly selected per game?
 - [ ] Add incendiary grenades
 - [ ] Kick player out of OMA menu at countdown?
+
+# Tourney
 - [ ] More dvar toggles (interval timer, camo mode, etc.)
 - [x] Pack with dependencies as IWD file, update [#Installation](#Installation).
 - [ ] Optimize script flows
